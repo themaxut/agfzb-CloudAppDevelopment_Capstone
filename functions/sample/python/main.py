@@ -3,8 +3,8 @@
 Returns:
     List: List of reviews for the given dealership
 """
-from cloudant.client import Cloudant
-from cloudant.error import CloudantException
+from ibmcloudant.client import Cloudant
+from ibmcloudant.error import CloudantException
 import requests
 
 
