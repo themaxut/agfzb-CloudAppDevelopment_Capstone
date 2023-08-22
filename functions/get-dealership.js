@@ -10,9 +10,17 @@ function dbCloudantConnect() {
         Cloudant(
             {
                 // eslint-disable-line'
-                iamApiKey: "0t4gHmiuNEaPBkDjsS39BnnfXXN_SJsq4ikGtRTz9Ma-",
                 url: "https://1f8ba730-6274-498e-bdc8-06a9d13ea97d-bluemix.cloudantnosqldb.appdomain.cloud",
-                // account: "1f8ba730-6274-498e-bdc8-06a9d13ea97d-bluemix",
+                maxAttempt: 5,
+                plugins: [
+                    {
+                        iamauth: {
+                            iamApiKey:
+                                "ocfwkFOckwPNULVBTrg78VniTWca_K_wQQ_Zm4B6mEkx",
+                        },
+                    },
+                    { retry: { retryDelayMultiplier: 4 } },
+                ],
             },
             (err, cloudant) => {
                 if (err) {
@@ -44,9 +52,20 @@ app.use(express.json());
 
 // Define a route to get all dealerships with optional state and ID filters
 app.get("/dealerships/get", (req, res) => {
-    const { state } = req.query;
+    const { state, id } = req.query;
 
-    if (state) {
+    if (id) {
+        // Fetch a specific dealership by ID
+        db.get(id, (err, result) => {
+            if (err) {
+                console.error("Error fetching dealership by ID:", err);
+                return res
+                    .status(500)
+                    .send("Something went wrong on the server.");
+            }
+            return res.json(result);
+        });
+    } else if (state) {
         // Fetch dealerships by state abbreviation
         db.find(
             {
@@ -70,7 +89,7 @@ app.get("/dealerships/get", (req, res) => {
             }
         );
     } else {
-        // Fetch all dealerships if no state provided
+        // Fetch all dealerships if no state or ID provided
         db.list({ include_docs: true }, (err, result) => {
             if (err) {
                 console.error("Error fetching all dealerships:", err);
